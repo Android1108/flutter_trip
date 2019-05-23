@@ -12,6 +12,7 @@ import 'package:flutter_app1/network/http_request.dart';
 import 'package:flutter_app1/network/http_request.dart';
 import 'package:flutter_app1/network/http_request.dart';
 import 'package:flutter_app1/widget/local_nav.dart';
+const APPBAR_OFFSET=100;
 
 class HomePage extends StatefulWidget{
   @override
@@ -21,9 +22,9 @@ class HomePage extends StatefulWidget{
 class _HomePageState extends State<HomePage>{
   List<HomeModelExampleLocalnavlist> localNavList =[];
   List _imageUrls=[
-    'http://pages.ctrip.com/commerce/promote/20180718/yxzy/img/640sygd.jpg',
-    'http://pages.ctrip.com/commerce/promote/20180718/yxzy/img/640sygd.jpg',
-    'http://pages.ctrip.com/commerce/promote/20180718/yxzy/img/640sygd.jpg',
+    'https://pages.ctrip.com/commerce/promote/20180718/yxzy/img/640sygd.jpg',
+    'https://pages.ctrip.com/commerce/promote/20180718/yxzy/img/640sygd.jpg',
+    'https://pages.ctrip.com/commerce/promote/20180718/yxzy/img/640sygd.jpg',
   ];
 
 
@@ -36,6 +37,22 @@ class _HomePageState extends State<HomePage>{
 
     getData();
   }
+  double appBarAlpha = 0;
+
+   _onScroll(offset) {
+    double alpha=offset/APPBAR_OFFSET;
+    if(alpha<0){
+      alpha=0;
+    }
+    else if(alpha>1){
+      alpha=1;
+    }
+    setState(() {
+      appBarAlpha=alpha;
+    });
+    print(alpha);
+
+  }
 
    getData() async {
     try {
@@ -44,11 +61,11 @@ class _HomePageState extends State<HomePage>{
       setState(() {
         localNavList=model.localNavList;
       });
-      User2Entity user2entity=User2Entity.fromJson(response.data);
-//      UserbeanEntity userbeanEntity=UserbeanEntity.fromJson(response.data);
-      setState(() {
-        name=user2entity.data.name;
-      });
+//      User2Entity user2entity=User2Entity.fromJson(response.data);
+////      UserbeanEntity userbeanEntity=UserbeanEntity.fromJson(response.data);
+//      setState(() {
+//        name=user2entity.data.name;
+//      });
 
       print(response);
     } catch (e) {
@@ -75,40 +92,68 @@ class _HomePageState extends State<HomePage>{
     // TODO: implement build
 
     return Scaffold(
+      body: Stack(
+        children: <Widget>[
+          MediaQuery.removePadding(
+              removeTop: true,
+              context: context,
+              child:NotificationListener(
 
+                  onNotification: (scrollNotification){
+                    if(scrollNotification is ScrollUpdateNotification && scrollNotification.depth==0){
+                      _onScroll(scrollNotification.metrics.pixels);
+                    }
+                  },
+                  child: ListView(
+                    children: <Widget>[
+                      Container(
+                        height: 170,
+                        child: Swiper(
+                          itemCount: _imageUrls.length,
+                          autoplay: true,
+                          itemBuilder: (BuildContext context,int index){
+                            return Image.network(
+                              _imageUrls[index],
+                              fit: BoxFit.fill,
+                            );
+                          },
+                          pagination: new SwiperPagination(),
+                        ),
+                      ),
 
-      body:  Center(
+                      LocalNav(localNavList: localNavList,),
+                      Container(
+                        height: 800,
+                        child: ListTile(
+                          title: Text("test"),
+                        ),
+                      ),
+                    ],
+                  ))
+          ),
+          Opacity(
+            opacity: appBarAlpha,
+            child: Container(
+              height: 80,
+              decoration: BoxDecoration(color: Colors.white),
+              child: Center(
+                child: Padding(
+                    padding: EdgeInsets.only(top: 20),
+                    child: Text('首页'),
+                ),
 
-        child:Column(
-          children: <Widget>[
-
-            Container(
-              height: 170,
-              child: Swiper(
-                itemCount: _imageUrls.length,
-                autoplay: true,
-                itemBuilder: (BuildContext context,int index){
-                  return Image.network(
-                    _imageUrls[index],
-                    fit: BoxFit.fill,
-                  );
-                },
-                pagination: new SwiperPagination(),
               ),
             ),
-            LocalNav(localNavList: localNavList,)
-          ],
-
-        )
-
-//
+          )
+        ],
+      )
 
 
-      ),
-
-      floatingActionButton: FloatingActionButton(onPressed: getData),
 
     );
   }
 
 }
+
+
+
