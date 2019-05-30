@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_app1/pages/login.dart';
 
 import 'navigator/tab_navigator.dart';
 
@@ -22,7 +23,12 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: TabNavigator(),
+      home:  LoginPage(), //TabNavigator(),
+      routes: <String, WidgetBuilder> {
+        '/TabNaviagator': (BuildContext context) => new TabNavigator(),
+
+      },
+
     );
   }
 }

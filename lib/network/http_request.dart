@@ -1,88 +1,99 @@
 import 'package:dio/dio.dart';
-import 'dart:convert';
-
-import 'api.dart';
 
 
-//要查网络请求的日志可以使用过滤<net>
-class NetUtil {
-  static const String GET = "get";
-  static const String POST = "post";
+class DioHttpUtils{
 
-  //get请求
-  static void get(String url, Function callBack,
-      {Map<String, String> params, Function errorCallBack}) async {
-    _request(Api.BaseUrl + url, callBack,
-        method: GET, params: params, errorCallBack: errorCallBack);
-  }
+  // 服务器接口地址公有部分
+  final _httpBaseUrl = "https://www.xxx...";
 
-  //post请求
-  static void post(String url, Function callBack,
-      {Map<String, String> params, Function errorCallBack}) async {
-    _request(url, callBack,
-        method: POST, params: params, errorCallBack: errorCallBack);
-  }
+  // 请求超时时长
+  final _httpConnectTimeout = 10000;
 
-  //具体的还是要看返回数据的基本结构
-  //公共代码部分
-  static void _request(String url, Function callBack,
-      {String method,
-        Map<String, String> params,
-        Function errorCallBack}) async {
-    print("<net> url :<" + method + ">" + url);
+  // 接收超时时长
+  final _hpptReceiveTimeout = 10000;
 
-    if (params != null && params.isNotEmpty) {
-      print("<net> params :" + params.toString());
+  // 本类实例
+  static DioHttpUtils _dioHttpUtilsObject;
+
+  // 请求实例
+  static Dio _dioObject;
+
+  // 参数实例
+  static BaseOptions _baseOptionsObject;
+
+  /// 单例访问
+  static DioHttpUtils getInstance(){
+    if(null == _dioHttpUtilsObject){
+      _dioHttpUtilsObject = new DioHttpUtils._();
     }
+    return _dioHttpUtilsObject;
+  }
 
-    String errorMsg = "";
-    int statusCode;
+  /// 私有化构造（单例模式）
+  DioHttpUtils._(){
+    // 初始化 http 基本设置
+    _baseOptionsObject =new BaseOptions(
+        baseUrl: _httpBaseUrl,
+        connectTimeout: _httpConnectTimeout,
+        receiveTimeout: _hpptReceiveTimeout,
+        headers: {}
+    );
 
-    try {
-      Response response;
-      if (method == GET) {
-        //组合GET请求的参数
-        if (params != null && params.isNotEmpty) {
-          StringBuffer sb = new StringBuffer("?");
-          params.forEach((key, value) {
-            sb.write("$key" + "=" + "$value" + "&");
-          });
-          String paramStr = sb.toString();
-          paramStr = paramStr.substring(0, paramStr.length - 1);
-          url += paramStr;
+    // 定义请求实例
+    _dioObject = new Dio(_baseOptionsObject);
+
+    // 添加请求事件监听
+    _dioObject.interceptors.add(InterceptorsWrapper(
+
+      // 拦截请求发送事件（如添加 token、versionCode、platformType 等）
+        onRequest: (RequestOptions options){
+          // do something
+          return options;
+        },
+
+        // 拦截请求响应事件（如数据重组，便于业务代码中快速处理调用）
+        onResponse: (Response response){
+          // do something
+          return response;
+        },
+
+        // 拦截请求失败事件（如添加统一的错误提示 或 统一的错误处理逻辑等）
+        onError: (DioError error){
+          return error;
         }
-        response = await Dio().get(url);
-      } else {
-        if (params != null && params.isNotEmpty) {
-          response = await Dio().post(url, data: params);
-        } else {
-          response = await Dio().post(url);
-        }
-      }
 
-      statusCode = response.statusCode;
-
-      //处理错误部分
-      if (statusCode < 0) {
-        errorMsg = "网络请求错误,状态码:" + statusCode.toString();
-        _handError(errorCallBack, errorMsg);
-        return;
-      }
-
-      if (callBack != null) {
-        callBack(response.data["data"]);
-        print("<net> response data:" + response.data["data"]);
-      }
-    } catch (exception) {
-      _handError(errorCallBack, exception.toString());
-    }
+    ));
   }
 
-  //处理异常
-  static void _handError(Function errorCallback, String errorMsg) {
-    if (errorCallback != null) {
-      errorCallback(errorMsg);
+  /// get 请求
+  get(url,{ options, parameters=null}) async {
+    Response response;
+    try{
+      response = await _dioObject.get(url, queryParameters:parameters);
+    }on DioError catch(e){
+      if(CancelToken.isCancel(e)){
+        print('请求取消：' + e.message);
+      }else{
+        print('请求错误：$e');
+      }
     }
-    print("<net> errorMsg :" + errorMsg);
+    return response.data;
   }
+
+  /// post请求
+  post(url,{ options, parameters=null}) async {
+    Response response;
+    try{
+      response = await _dioObject.post(url, queryParameters:parameters !=null ? parameters : {});
+      print(response);
+    }on DioError catch(e){
+      if(CancelToken.isCancel(e)){
+        print('请求取消：' + e.message);
+      }else{
+        print('请求错误：$e');
+      }
+    }
+    return response.data;
+  }
+
 }
