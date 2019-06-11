@@ -4,8 +4,10 @@
  * 写一个贼特么好看的登录页面
  */
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app1/network/http_request.dart';
+import 'package:flutter_app1/network/http_util.dart';
 
 
 class LoginPage extends StatefulWidget {
@@ -62,6 +64,7 @@ class _LoginPageState extends State<LoginPage> {
             )));
   }
 
+
   Align buildRegisterText(BuildContext context) {
     return Align(
       alignment: Alignment.center,
@@ -79,6 +82,8 @@ class _LoginPageState extends State<LoginPage> {
               onTap: () {
                 //TODO 跳转到注册页面
                 print('去注册');
+
+
                 Navigator.pop(context);
               },
             ),
@@ -87,6 +92,14 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
+
+  Future login(username,password) async {
+
+    var response=await HttpUtil().post("/seal/api/v1/account/login",data: {'username':username,'password':password});
+    print(response.toString());
+  }
+
 
   ButtonBar buildOtherMethod(BuildContext context) {
     return ButtonBar(
@@ -139,9 +152,9 @@ class _LoginPageState extends State<LoginPage> {
               _formKey.currentState.save();
 
               //TODO 执行登录方法
-              DioHttpUtils.getInstance().post("us;");
+              login(_email,_password);
 
-              Navigator.of(context).pushNamed('/TabNaviagator');
+              //Navigator.of(context).pushNamed('/TabNaviagator');
 
               print('email:$_email , assword:$_password');
             }
