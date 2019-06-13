@@ -4,7 +4,7 @@ import 'package:flutter_app1/dao/home_dao.dart';
 import 'package:flutter_app1/model/home_model_example_entity.dart';
 import 'package:flutter_app1/model/user.dart';
 import 'package:flutter_app1/model/user2_entity.dart';
-import 'package:flutter_app1/model/userbean_entity.dart';
+
 import 'package:flutter_app1/network/api.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 

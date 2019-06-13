@@ -5,10 +5,13 @@
  */
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_app1/model/basebean_entity.dart';
+import 'package:flutter_app1/model/login_entity.dart';
+import 'package:flutter_app1/model/user_bean_entity.dart';
 import 'package:flutter_app1/network/http_request.dart';
 import 'package:flutter_app1/network/http_util.dart';
-
 
 class LoginPage extends StatefulWidget {
   @override
@@ -16,7 +19,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-
   final _formKey = GlobalKey<FormState>();
   String _email, _password;
   bool _isObscure = true;
@@ -64,7 +66,6 @@ class _LoginPageState extends State<LoginPage> {
             )));
   }
 
-
   Align buildRegisterText(BuildContext context) {
     return Align(
       alignment: Alignment.center,
@@ -83,7 +84,6 @@ class _LoginPageState extends State<LoginPage> {
                 //TODO 跳转到注册页面
                 print('去注册');
 
-
                 Navigator.pop(context);
               },
             ),
@@ -93,35 +93,27 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-
-  Future login(username,password) async {
-
-    var response=await HttpUtil().post("/seal/api/v1/account/login",data: {'username':username,'password':password});
-    print(response.toString());
-  }
-
-
   ButtonBar buildOtherMethod(BuildContext context) {
     return ButtonBar(
       alignment: MainAxisAlignment.center,
       children: _loginMethod
           .map((item) => Builder(
-        builder: (context) {
-          return IconButton(
-              icon: Icon(item['icon'],
-                  color: Theme.of(context).iconTheme.color),
-              onPressed: () {
-                //TODO : 第三方登录方法
-                Scaffold.of(context).showSnackBar(new SnackBar(
-                  content: new Text("${item['title']}登录"),
-                  action: new SnackBarAction(
-                    label: "取消",
-                    onPressed: () {},
-                  ),
-                ));
-              });
-        },
-      ))
+                builder: (context) {
+                  return IconButton(
+                      icon: Icon(item['icon'],
+                          color: Theme.of(context).iconTheme.color),
+                      onPressed: () {
+                        //TODO : 第三方登录方法
+                        Scaffold.of(context).showSnackBar(new SnackBar(
+                          content: new Text("${item['title']}登录"),
+                          action: new SnackBarAction(
+                            label: "取消",
+                            onPressed: () {},
+                          ),
+                        ));
+                      });
+                },
+              ))
           .toList(),
     );
   }
@@ -135,34 +127,54 @@ class _LoginPageState extends State<LoginPage> {
         ));
   }
 
-  Align buildLoginButton(BuildContext context) {
+  Align buildLoginButton(BuildContext context1) {
     return Align(
       child: SizedBox(
         height: 45.0,
         width: 270.0,
-        child: RaisedButton(
-          child: Text(
-            'Login',
-            style: Theme.of(context).primaryTextTheme.headline,
-          ),
-          color: Colors.black,
-          onPressed: () {
-            if (_formKey.currentState.validate()) {
-              ///只有输入的内容符合要求通过才会到达此处
-              _formKey.currentState.save();
-
-              //TODO 执行登录方法
-              login(_email,_password);
-
-              //Navigator.of(context).pushNamed('/TabNaviagator');
-
-              print('email:$_email , assword:$_password');
-            }
-          },
-          shape: StadiumBorder(side: BorderSide()),
-        ),
+        child: Builder(builder: (context) {
+          return RaisedButton(
+            child: Text(
+              'Login',
+              style: Theme.of(context).primaryTextTheme.headline,
+            ),
+            color: Colors.black,
+            onPressed: () {
+              if (_formKey.currentState.validate()) {
+                ///只有输入的内容符合要求通过才会到达此处
+                _formKey.currentState.save();
+                //TODO 执行登录方法
+                login(_email, _password, context);
+                print('email:$_email , assword:$_password');
+              }
+            },
+            shape: StadiumBorder(side: BorderSide()),
+          );
+        }),
       ),
     );
+  }
+
+  Future login(username, password, context) async {
+    var response = await HttpUtil().post("/seal/api/v1/account/login",
+        data: {'username': username, 'password': password});
+    var json = UserBeanEntity.fromJson(response);
+    print(json.description);
+
+    Scaffold.of(context).showSnackBar(new SnackBar(
+      content: new Text(json.description),
+      action: new SnackBarAction(
+        label: "取消",
+        onPressed: () {},
+      ),
+    ));
+    if (json.status == "SUCCESS") {
+
+      Navigator.of(context).pushNamed('/TabNaviagator');
+    } else {
+
+    }
+    print(response.toString());
   }
 
   Padding buildForgetPasswordText(BuildContext context) {
@@ -215,13 +227,14 @@ class _LoginPageState extends State<LoginPage> {
       decoration: InputDecoration(
         labelText: 'Emall Address',
       ),
-      validator: (String value) {
-        var emailReg = RegExp(
-            r"[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[\w](?:[\w-]*[\w])?");
-        if (!emailReg.hasMatch(value)) {
-          return '请输入正确的邮箱地址';
-        }
-      },
+
+//      validator: (String value) {
+//        var emailReg = RegExp(
+//            r"[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[\w](?:[\w-]*[\w])?");
+//        if (!emailReg.hasMatch(value)) {
+//          return '请输入正确的邮箱地址';
+//        }
+//      },
       onSaved: (String value) => _email = value,
     );
   }
